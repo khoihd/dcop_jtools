@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instance xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="src/ch/epfl/lia/frodo/algorithms/XCSPschema.xsd">
+<presentation name="meeting scheduling" maxConstraintArity="2" maximize="true" format="XCSP 2.1_FRODO"/>
+<agents nbAgents="5">
+	<agent name="a_0"/>
+	<agent name="a_1"/>
+	<agent name="a_2"/>
+	<agent name="a_3"/>
+	<agent name="a_4"/>
+</agents>
+<domains nbDomains="1">
+	<domain name="d" nbValues="4">0..3</domain>
+</domains>
+<variables nbVariables="5">
+	<variable name="v_0" domain="d" agent="a_0"/>
+	<variable name="v_1" domain="d" agent="a_1"/>
+	<variable name="v_2" domain="d" agent="a_2"/>
+	<variable name="v_3" domain="d" agent="a_3"/>
+	<variable name="v_4" domain="d" agent="a_4"/>
+</variables>
+<relations nbRelations="5">
+	<relation name="r_1_0" arity="2" nbTuples="6" semantics="soft" defaultCost="-infinity">49:1 0 |46:1 3 |43:2 0 |75:2 1 |50:2 3 |31:3 1 </relation>
+	<relation name="r_3_1" arity="2" nbTuples="6" semantics="soft" defaultCost="-infinity">33:0 1 |22:1 2 |5:1 3 |26:2 0 |74:2 1 |40:3 0 </relation>
+	<relation name="r_4_0" arity="2" nbTuples="6" semantics="soft" defaultCost="-infinity">14:0 2 |72:1 3 |29:2 0 |2:2 1 |1:3 0 |55:3 1 </relation>
+	<relation name="r_4_1" arity="2" nbTuples="5" semantics="soft" defaultCost="-infinity">2:0 1 |68:1 3 |17:2 0 |8:2 1 |88:3 1 </relation>
+	<relation name="r_4_2" arity="2" nbTuples="4" semantics="soft" defaultCost="-infinity">58:1 0 |86:2 0 |60:3 1 |67:3 2 </relation>
+</relations>
+<constraints nbConstraints="5">
+	<constraint name="c_0" arity="2" scope="v_1 v_0" reference="r_1_0"/>
+	<constraint name="c_1" arity="2" scope="v_3 v_1" reference="r_3_1"/>
+	<constraint name="c_2" arity="2" scope="v_4 v_0" reference="r_4_0"/>
+	<constraint name="c_3" arity="2" scope="v_4 v_1" reference="r_4_1"/>
+	<constraint name="c_4" arity="2" scope="v_4 v_2" reference="r_4_2"/>
+</constraints>
+</instance>
