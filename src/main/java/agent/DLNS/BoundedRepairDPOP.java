@@ -32,6 +32,7 @@ public class BoundedRepairDPOP implements RepairPhase {
     private ContextPhase  context;
     
     private boolean j_updated;
+    private int currentIteration;
 
     public BoundedRepairDPOP(DLNSagent selfRef) {
         this.selfRef = selfRef;
@@ -140,6 +141,14 @@ public class BoundedRepairDPOP implements RepairPhase {
 	public void setJ_updated(boolean j_updated) {
 		this.j_updated = j_updated;
 	}
+
+    public int getCurrentIteration() {
+        return currentIteration;
+    }
+
+    public void setCurrentIteration(int currentIteration) {
+        this.currentIteration = currentIteration;
+    }
 
     /**
      * The relaxation phase.

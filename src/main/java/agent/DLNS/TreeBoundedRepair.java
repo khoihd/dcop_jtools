@@ -38,6 +38,7 @@ public class TreeBoundedRepair implements RepairPhase {
     private ContextPhase  context;
     
     private boolean j_updated;
+    private int currentIteration;
 
     public TreeBoundedRepair(DLNSagent selfRef) {
         this.selfRef = selfRef;
@@ -62,7 +63,7 @@ public class TreeBoundedRepair implements RepairPhase {
                 recvPTinfo = true;
                 recvLNInfoMsgs = 0;
             }
-        } else if (message instanceof  PTInfoMessage) {
+        } else if (message instanceof PTInfoMessage) {
             PTInfoMessage ptInfo = (PTInfoMessage) message;
             selfRef.getAgentView().pseudoTreeK.update(ptInfo.getTreeAgent());
             //System.out.println(selfRef.getName() + " recv PT: " + getPseduoTreeK().toString());
@@ -148,7 +149,15 @@ public class TreeBoundedRepair implements RepairPhase {
 		this.j_updated = j_updated;
 	}
 
-	/**
+	public int getCurrentIteration() {
+        return currentIteration;
+    }
+
+	public void setCurrentIteration(int currentIteration) {
+        this.currentIteration = currentIteration;
+    }
+
+    /**
      * The relaxation phase.
      * Constructs a pseudoForest using exclusively the variables in the current LN^k
      */
@@ -179,6 +188,7 @@ public class TreeBoundedRepair implements RepairPhase {
         public void initialize() {
             if (selfRef.getId() == 0) {
                 // initialize parent Child Set
+                // Khoi: for each agent, add all neighbors to its parent child set as [agent][neighbors]
                 for (ComAgent agt : DCOPinfo.agentsRef) {
                     int agtIdx = (int) agt.getId();
                     parentChildSet[agtIdx] = new ParentChild[agt.getNbNeighbors()];
@@ -210,7 +220,7 @@ public class TreeBoundedRepair implements RepairPhase {
                 }
 
                 Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-                buildPseudoTree(LN);
+                buildPseudoTree(LN, currentIteration);
                 // Update pseudoTree
                 PseudoTree Tk = getTreeAgent((int) selfRef.getId());
                 selfRef.getAgentView().pseudoTreeK.update(Tk);
@@ -260,7 +270,7 @@ public class TreeBoundedRepair implements RepairPhase {
         }
 
         /**
-         * Comparator which prefer agents with frewer neighbors.
+         * Comparator which prefer agents with fewer neighbors.
          * Using this comparator, such agents will be located on the upper part of
          * the pseudo-tree.
          */
@@ -297,9 +307,8 @@ public class TreeBoundedRepair implements RepairPhase {
             }
         }
 
-        protected void buildPseudoTree(boolean[] LN) {
+        protected void buildPseudoTree(boolean[] LN, int iteration) {
             clear();
-
 
             while (true) {  // Forest exploration
                 ComAgent root = DCOPinfo.leaderAgent;
@@ -307,7 +316,7 @@ public class TreeBoundedRepair implements RepairPhase {
                 while (rootID < nbAgents && (discovered[rootID] || !LN[rootID])) {
                     rootID++;
                 }
-                if (rootID >= nbAgents) break; // All agents in LN^k have been expored
+                if (rootID >= nbAgents) break; // All agents in LN^k have been explored
 
                 root = DCOPinfo.agentsRef[rootID];
                 dfsQueue[dfsQueueSize++] = root;
@@ -316,7 +325,10 @@ public class TreeBoundedRepair implements RepairPhase {
                 while (dfsQueueSize > 0) {
                     ComAgent agt =  dfsQueue[--dfsQueueSize];
                     int agtIdx = (int) agt.getId();
-
+                    
+                    // Khoi: if the first iteration, store the edges to be avoided
+                    // For edges (vertexID1, vertexID2)
+                    // Build a hashMap(agent) -> neighbors not for building edges
                     if (!discovered[agtIdx]) {
                         // Prefers edges which have not been explored yet
                         ParentChild[] neighbors = parentChildSet[agtIdx];
@@ -325,6 +337,10 @@ public class TreeBoundedRepair implements RepairPhase {
 //                        Collections.sort(agt.getNeighborsRef(), new MinTreeWidthComparator());
 //                        for (ComAgent chAgt : agt.getNeighborsRef()) {
                         for (ParentChild pc : neighbors) {
+                            // Khoi:
+                            // If the first iteration and pc in neighbor not for building edges
+                            // Continue
+                            
                             ComAgent chAgt = pc.child;
                             int chIdx = (int) chAgt.getId();
 

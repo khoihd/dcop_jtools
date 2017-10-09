@@ -60,12 +60,7 @@ public class DLNSagent extends DCOPagent {
 
         k = 0;
         lowerBound = 0;//getAgentView().getAggregatedLB();
-        upperBound = Constants.infinity;//getAgentView().getAggregatedUB();
-        
-//        j = 0;
-//        f_j = 0;
-//        UB_j = Constants.infinity;
-        
+        upperBound = Constants.infinity;//getAgentView().getAggregatedUB();        
         currentLeastUB = Integer.MAX_VALUE;
     }
 
@@ -114,7 +109,7 @@ public class DLNSagent extends DCOPagent {
         while (!terminationCondition()) {
             k++;
             getAgentView().currentIteration = k;
-            DLNScycle();
+            DLNScycle(k);
             getAgentStatistics().updateIterationStats();
 
             if (isLeader()) {
@@ -171,29 +166,14 @@ public class DLNSagent extends DCOPagent {
 		this.currentLeastUB = currentLeastUB;
 	}
 
-//	public int getF_j() {
-//		return f_j;
-//	}
-//
-//	public void setF_j(int f_j) {
-//		this.f_j = f_j;
-//	}
-//
-//	public static int getJ() {
-//		return j;
-//	}
-//
-//	public static void setJ(int j) {
-//		DLNSagent.j = j;
-//	}
-
-    protected void DLNScycle() {
+    protected void DLNScycle(int currentIteration) {
 
         destroyPhase.start();
         while (!destroyPhase.isTerminated()) {
             await();
         }
 
+        repairPhase.setCurrentIteration(currentIteration);
         repairPhase.start();
         while (!repairPhase.isTerminated()) {
             await();
@@ -232,7 +212,8 @@ public class DLNSagent extends DCOPagent {
      */
     public class PseudoTreeBuilder {
         private boolean recvPTinfo = false;
-
+        private int currentIteration;
+        
         public void start() {
             recvPTinfo = false;
             if (isLeader()) { // If leader:
@@ -300,6 +281,14 @@ public class DLNSagent extends DCOPagent {
             }//-Tree
 
             assert (nDiscovered == nbAgents);
+        }
+
+        public int getCurrentIteration() {
+            return currentIteration;
+        }
+
+        public void setCurrentIteration(int currentIteration) {
+            this.currentIteration = currentIteration;
         }
     }
 

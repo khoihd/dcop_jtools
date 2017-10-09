@@ -34,7 +34,8 @@ public class RandomDestroy implements DestroyPhase {
         selfRef.getAgentView().varDestroyed = rnd.nextBoolean();
 
         if(selfRef.getAgentView().varDestroyed) {
-        } else {
+        } 
+        else { // Not destroyed, keep the same value in the previous iteration
             int val = selfRef.getAgentView().getVariableValue();
             selfRef.getAgentView().varCheckValueK = val;
             selfRef.getAgentView().varHatValueK   = val;

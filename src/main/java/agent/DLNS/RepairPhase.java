@@ -17,6 +17,8 @@ public interface RepairPhase {
     void onReceive(RepairPhase.Message message, ComAgent sender);
     
 	public void setJ_updated(boolean j_updated);
+	
+	public void setCurrentIteration(int iteration);
 
     static class Message extends BasicMessage {
 

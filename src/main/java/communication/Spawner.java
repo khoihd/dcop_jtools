@@ -56,7 +56,7 @@ public class Spawner {
      */
     public void spawn(List<Object> algParameters) {
 
-        // Spawn the Statistics collector Deamon
+        // Spawn the Statistics collector Daemon
         final ComAgent statsCollector = new StatisticsDeamon(spawnedAgentStates.size());
         statsCollector.start();
 

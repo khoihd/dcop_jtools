@@ -251,7 +251,17 @@ public class DLNSAgentView extends AgentView {
             long parKId = pseudoTreeK.isRoot() ? -1 : pseudoTreeK.getParent().getId();
             prevSAT = containsTrue(isNSATConstraints) ? false : true;            
             Arrays.fill(isNSATConstraints, false);
-            	
+            
+            // If isPrevOptConstraints is all false
+            // It means all constraints are not optimized in the previous iteration
+            // and this is the first iteration
+
+            // Then consider the edges in BMS tree, so now we need to store BMS tree as an input
+            // Only consider the edges are discarded (not consider in DTREE) => modify DTREE algorithms
+            // DTREE should only discards the discarded edges from BMS when building PseudoTree
+            // Then in bounding phase, consider quality of all edges (UB = LB) 
+            
+            // First iteration:
             for (int c = 0; c < nConstraints; c++) {
                 otherId = (scopeAgentsID[2*c + 0] == -1) ? scopeAgentsID[2*c + 1] : scopeAgentsID[2*c + 0];
                 
@@ -277,14 +287,14 @@ public class DLNSAgentView extends AgentView {
                     
                     // SAT
                     if (Constraint.isSat(value)) {
-                        // in k and k-1
+                        // in k and j
                     	if (isPrevSATOptConstraints[c]) {
 //                        	tempUB = value + prevSATOpt[c] - constraintLB[c];
                         	tempUB = value + j_stored[c] - constraintLB[c];
                         	isPrevOptConstraints[c] = true;
                         	prevOpt[c] = value;
                         }
-                    	// in k only, not in k-1
+                    	// in k only, not in j
                         else {
                         	tempUB = value;
                         	isPrevOptConstraints[c] = true;
@@ -305,7 +315,7 @@ public class DLNSAgentView extends AgentView {
                     	isNSATConstraints[c] = true;
                     }
                 }
-                // in k-1
+                // in j, not in k
                 else if (isPrevSATOptConstraints[c]) {
 //                	tempUB = prevOpt[c];
 //                	tempUB = prevSATOpt[c];
@@ -319,7 +329,6 @@ public class DLNSAgentView extends AgentView {
                 }
                 aggregateValue += tempUB;
             }
-                        
             return aggregateValue;
         }
 
