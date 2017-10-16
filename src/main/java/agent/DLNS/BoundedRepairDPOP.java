@@ -33,6 +33,7 @@ public class BoundedRepairDPOP implements RepairPhase {
     
     private boolean j_updated;
     private int currentIteration;
+    private String bmsFileName;
 
     public BoundedRepairDPOP(DLNSagent selfRef) {
         this.selfRef = selfRef;
@@ -1058,5 +1059,11 @@ public class BoundedRepairDPOP implements RepairPhase {
                     ", UB=" + UB +
                     '}';
         }
+    }
+
+    @Override
+    public void setBMSfile(String bmsFileName) {
+        // TODO Auto-generated method stub
+        this.bmsFileName = bmsFileName;
     }
 }

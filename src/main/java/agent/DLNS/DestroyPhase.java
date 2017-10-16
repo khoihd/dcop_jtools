@@ -15,6 +15,8 @@ public interface DestroyPhase {
     boolean isTerminated();
 
     void onReceive(DestroyPhase.Message message, ComAgent sender);
+    
+    public void setCurrentIteration(int iteration);
 
     static class Message extends BasicMessage {
 

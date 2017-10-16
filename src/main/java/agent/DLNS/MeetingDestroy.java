@@ -25,6 +25,7 @@ public class MeetingDestroy implements DestroyPhase {
     private Tuple evaluatorTuple;
     private Destroyer destroyer;
     private int totNogoods;
+    private int currentIteration;
 
     // Reference to the agentView of The DCOPagent
     private DLNSagent selfRef;
@@ -299,6 +300,12 @@ public class MeetingDestroy implements DestroyPhase {
         public boolean isDestroyState() {
             return destroyState;
         }
+    }
+
+    @Override
+    public void setCurrentIteration(int iteration) {
+        // TODO Auto-generated method stub
+        this.currentIteration = iteration;
     }
 }
 

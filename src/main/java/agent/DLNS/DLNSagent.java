@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
+import javax.imageio.plugins.bmp.BMPImageWriteParam;
+
 
 /**
  * Created by ffiorett on 7/31/15.
@@ -29,6 +31,7 @@ public class DLNSagent extends DCOPagent {
     private DestroyPhase    destroyPhase;
     private RepairPhase     repairPhase;
     private PseudoTreeBuilder ptBuilder;
+    private String bmsFile;
     
 //    public static int 		j; 
 //    private int				f_j;
@@ -36,13 +39,13 @@ public class DLNSagent extends DCOPagent {
     private int currentLeastUB;
 
 	public DLNSagent(ComAgent statsCollector, AgentState agentState, List<Object> parameters) {
-
         super(statsCollector, agentState.getName(), agentState.getID());
 
         String destroyType = (String)parameters.get(0);
         String repairType = (String)parameters.get(1);
         int nbIter = (int)parameters.get(2);
 //        long timeout = (long)parameters.get(3);
+        bmsFile = (String) parameters.get(4);
 
         this.nbIterations = nbIter;
 //        this.timeoutMs = timeout;
@@ -93,7 +96,6 @@ public class DLNSagent extends DCOPagent {
 
         // Randomly initialize the value of this variable
         getAgentActions().setVariableVariableAtRandom();
-        //getAgentActions().setVariableValue(1); // todo: remove this and enable the above;
 
         ptBuilder.start();
         while (!ptBuilder.isTerminated()) {
@@ -109,7 +111,7 @@ public class DLNSagent extends DCOPagent {
         while (!terminationCondition()) {
             k++;
             getAgentView().currentIteration = k;
-            DLNScycle(k);
+            DLNScycle(k, bmsFile);
             getAgentStatistics().updateIterationStats();
 
             if (isLeader()) {
@@ -166,14 +168,16 @@ public class DLNSagent extends DCOPagent {
 		this.currentLeastUB = currentLeastUB;
 	}
 
-    protected void DLNScycle(int currentIteration) {
+    protected void DLNScycle(int currentIteration, String bmsFile) {
 
+        destroyPhase.setCurrentIteration(currentIteration);
         destroyPhase.start();
         while (!destroyPhase.isTerminated()) {
             await();
         }
 
         repairPhase.setCurrentIteration(currentIteration);
+        repairPhase.setBMSfile(bmsFile);
         repairPhase.start();
         while (!repairPhase.isTerminated()) {
             await();
@@ -231,7 +235,6 @@ public class DLNSagent extends DCOPagent {
                 for (ComAgent agt : DCOPinfo.agentsRef) {
                     if (agt.getId() != getId()) {
                         agt.tell(new PTStarInfoMessage(treeAgents[(int) agt.getId()]), getSelf());
-                        //System.out.println("Tree_"+agt.getId() + treeAgents[(int)agt.getId()].toString());
                     }
                 }
                 Thread.currentThread().setPriority(Thread.NORM_PRIORITY);

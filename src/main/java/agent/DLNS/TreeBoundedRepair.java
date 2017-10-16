@@ -8,10 +8,18 @@ import kernel.Constants;
 import kernel.Constraint;
 import kernel.Tuple;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -39,6 +47,7 @@ public class TreeBoundedRepair implements RepairPhase {
     
     private boolean j_updated;
     private int currentIteration;
+    private String bmsFileName;
 
     public TreeBoundedRepair(DLNSagent selfRef) {
         this.selfRef = selfRef;
@@ -47,7 +56,6 @@ public class TreeBoundedRepair implements RepairPhase {
         this.solving = new SolvingPhase();
         this.bounding = new BoundingPhase();
         this.context = new ContextPhase();
-        
         this.setJ_updated(false);
     }
 
@@ -220,7 +228,7 @@ public class TreeBoundedRepair implements RepairPhase {
                 }
 
                 Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-                buildPseudoTree(LN, currentIteration);
+                buildPseudoTree(LN, currentIteration, bmsFileName);
                 // Update pseudoTree
                 PseudoTree Tk = getTreeAgent((int) selfRef.getId());
                 selfRef.getAgentView().pseudoTreeK.update(Tk);
@@ -307,7 +315,7 @@ public class TreeBoundedRepair implements RepairPhase {
             }
         }
 
-        protected void buildPseudoTree(boolean[] LN, int iteration) {
+        protected void buildPseudoTree(boolean[] LN, int iteration, String bmsFileName) {
             clear();
 
             while (true) {  // Forest exploration
@@ -329,6 +337,10 @@ public class TreeBoundedRepair implements RepairPhase {
                     // Khoi: if the first iteration, store the edges to be avoided
                     // For edges (vertexID1, vertexID2)
                     // Build a hashMap(agent) -> neighbors not for building edges
+                    Map<Integer, Set<Integer>> edgesMap = null; 
+                    if (iteration == 1)
+                        edgesMap = readListOfEdges(bmsFileName);
+                    
                     if (!discovered[agtIdx]) {
                         // Prefers edges which have not been explored yet
                         ParentChild[] neighbors = parentChildSet[agtIdx];
@@ -336,13 +348,18 @@ public class TreeBoundedRepair implements RepairPhase {
 
 //                        Collections.sort(agt.getNeighborsRef(), new MinTreeWidthComparator());
 //                        for (ComAgent chAgt : agt.getNeighborsRef()) {
-                        for (ParentChild pc : neighbors) {
-                            // Khoi:
-                            // If the first iteration and pc in neighbor not for building edges
-                            // Continue
-                            
+                        for (ParentChild pc : neighbors) {                            
                             ComAgent chAgt = pc.child;
                             int chIdx = (int) chAgt.getId();
+                            
+                            // Khoi:
+                            // If the first iteration and chIdx not in edgesMap of agtIdx
+                            // Then continue
+                            if (iteration == 1 && !edgesMap.get(agtIdx).contains(chIdx))
+                                continue;
+                            
+//                            if (iteration == 1)
+//                                System.out.println("BMS Edges: " +  agtIdx + " " +  chIdx);
 
                             // Skip node if it is not in current LN (frozen)
                             if (!LN[chIdx]) continue;
@@ -377,7 +394,49 @@ public class TreeBoundedRepair implements RepairPhase {
             }//-Forest
 
         }
+        
+        protected Map<Integer, Set<Integer>> readListOfEdges(String inputFileName) {
+            Map<Integer, Set<Integer>> edges = new HashMap<Integer, Set<Integer>>();
+            try (BufferedReader br = new BufferedReader(
+                    new FileReader(System.getProperty("user.dir") + '/' + inputFileName))) {
 
+                String line = br.readLine();
+                while (null != line && !line.contains("<constraints")) {
+                    line = br.readLine();
+                }
+                line = line.replace("constraints nbConstraints=\"", "").replace("<","").replace("\"", "").replace(">", "");
+                int noConstraints = Integer.valueOf(line);
+                line = br.readLine();
+                for (int i=0; i<noConstraints; i++) {
+                    int idx1 = Integer.valueOf(line.split(" ")[3].replace("scope=\"v_", ""));
+                    int idx2 = Integer.valueOf(line.split(" ")[4].replace("v_","").replace("\"",""));
+                    addToEdges(edges, idx1, idx2);                
+                    line = br.readLine();
+                }
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return edges;
+        }
+        
+        protected void addToEdges(Map<Integer, Set<Integer>> edgesMap, int idx1, int idx2) {
+            Set<Integer> edges1 = edgesMap.get(idx1);
+            Set<Integer> edges2 = edgesMap.get(idx2);
+            if (null == edges1) {
+                edges1 = new HashSet<Integer>();
+            }
+            if (null == edges2) {
+                edges2 = new HashSet<Integer>();
+            }
+            edges1.add(idx2);
+            edges2.add(idx1);
+            edgesMap.put(idx1, edges1);
+            edgesMap.put(idx2, edges2);
+        }
     }
 
     /**
@@ -948,5 +1007,11 @@ public class TreeBoundedRepair implements RepairPhase {
                     ", UB=" + UB +
                     '}';
         }
+    }
+
+    @Override
+    public void setBMSfile(String bmsFileName) {
+        // TODO Auto-generated method stub
+        this.bmsFileName = bmsFileName;
     }
 }

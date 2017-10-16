@@ -30,7 +30,15 @@ import kernel.DCOPInstanceFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -55,6 +63,8 @@ public class dcop_jtools {
             return;
         }
         String file = argv[0];
+        String bmsFile = file + ".tmp";
+        
         for (int i = 1; i < argv.length; i++) {
             if (argv[i].equals("-i") || argv[i].equals("--iterations")) {
                 nbIterations = Integer.parseInt(argv[i+1]);
@@ -76,6 +86,7 @@ public class dcop_jtools {
         algParams.add(repairPhase);
         algParams.add(nbIterations);
         algParams.add(timeoutMs);
+        algParams.add(bmsFile);
         spawner.spawn(algParams);
 
         // Summary Output
@@ -130,6 +141,5 @@ public class dcop_jtools {
         }
         return  res;
     }
-
 }
 

@@ -15,6 +15,8 @@ public class RandomDestroy implements DestroyPhase {
 
     // Reference to the agentView of The DCOPagent
     private DLNSagent selfRef;
+    
+    private int currentIteration;
 
     public RandomDestroy(DLNSagent selfRef) {
         this.selfRef = selfRef;
@@ -31,7 +33,14 @@ public class RandomDestroy implements DestroyPhase {
     @Override
     public void start() {
         terminated = false;
-        selfRef.getAgentView().varDestroyed = rnd.nextBoolean();
+        if (currentIteration == 1)
+            selfRef.getAgentView().varDestroyed = true;
+        else 
+            selfRef.getAgentView().varDestroyed = rnd.nextBoolean();
+        
+        // TODO: destroy variables with more neighbors
+        // Probability???
+        // Get the maximum degree of all variables
 
         if(selfRef.getAgentView().varDestroyed) {
         } 
@@ -103,6 +112,12 @@ public class RandomDestroy implements DestroyPhase {
         public String toString() {
             return "Destroy::ContextMessage";
         }
+    }
+
+    @Override
+    public void setCurrentIteration(int iteration) {
+        // TODO Auto-generated method stub
+        this.currentIteration = iteration;
     }
 }
 

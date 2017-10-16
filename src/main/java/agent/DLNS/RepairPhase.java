@@ -19,6 +19,8 @@ public interface RepairPhase {
 	public void setJ_updated(boolean j_updated);
 	
 	public void setCurrentIteration(int iteration);
+	
+	public void setBMSfile(String bmsFileName);
 
     static class Message extends BasicMessage {
 
