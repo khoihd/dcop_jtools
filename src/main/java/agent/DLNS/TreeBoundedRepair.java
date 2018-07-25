@@ -94,7 +94,6 @@ public class TreeBoundedRepair implements RepairPhase {
             BoundMessage msg = (BoundMessage) message;
             bounding.LB.set(Constraint.add(bounding.LB.get(), msg.getLB()));
             bounding.UB.set(Constraint.add(bounding.UB.get(), msg.getUB()));
-            // System.out.println(selfRef.getName() + " recv msg: " + msg + " from " + sender);
             recvBoundMsgs++;
         }
 
@@ -111,6 +110,10 @@ public class TreeBoundedRepair implements RepairPhase {
 
         // UtilPropagation
         // Returns \hat{x}_i and \check{x}_i. Takes in input PT_i^k.
+        
+        // KHOI: consider neighbors who have preserved values
+        // For all constraint tables with them, prune the constraints tables
+        // Only start if the variable is destroy
         if (selfRef.getAgentView().isVarDestroyed())
             solving.start();
 
@@ -196,7 +199,7 @@ public class TreeBoundedRepair implements RepairPhase {
         public void initialize() {
             if (selfRef.getId() == 0) {
                 // initialize parent Child Set
-                // Khoi: for each agent, add all neighbors to its parent child set as [agent][neighbors]
+                // Khoi: here, for each agent, add all neighbors to its parent child set as [agent][neighbors]
                 for (ComAgent agt : DCOPinfo.agentsRef) {
                     int agtIdx = (int) agt.getId();
                     parentChildSet[agtIdx] = new ParentChild[agt.getNbNeighbors()];
@@ -338,8 +341,9 @@ public class TreeBoundedRepair implements RepairPhase {
                     // For edges (vertexID1, vertexID2)
                     // Build a hashMap(agent) -> neighbors not for building edges
                     Map<Integer, Set<Integer>> edgesMap = null; 
-                    if (iteration == 1)
+                    if (iteration == 1) {
                         edgesMap = readListOfEdges(bmsFileName);
+                    }
                     
                     if (!discovered[agtIdx]) {
                         // Prefers edges which have not been explored yet
@@ -355,8 +359,13 @@ public class TreeBoundedRepair implements RepairPhase {
                             // Khoi:
                             // If the first iteration and chIdx not in edgesMap of agtIdx
                             // Then continue
-                            if (iteration == 1 && !edgesMap.get(agtIdx).contains(chIdx))
-                                continue;
+                            if (iteration == 1) {
+                                if (edgesMap.get(agtIdx) == null)
+                                    continue;
+                                if (!edgesMap.get(agtIdx).contains(chIdx)) {
+                                    continue;
+                                }
+                            }
                             
 //                            if (iteration == 1)
 //                                System.out.println("BMS Edges: " +  agtIdx + " " +  chIdx);
@@ -410,14 +419,12 @@ public class TreeBoundedRepair implements RepairPhase {
                 for (int i=0; i<noConstraints; i++) {
                     int idx1 = Integer.valueOf(line.split(" ")[3].replace("scope=\"v_", ""));
                     int idx2 = Integer.valueOf(line.split(" ")[4].replace("v_","").replace("\"",""));
-                    addToEdges(edges, idx1, idx2);                
+                    addToEdges(edges, idx1, idx2);          
                     line = br.readLine();
                 }
             } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return edges;
@@ -436,7 +443,7 @@ public class TreeBoundedRepair implements RepairPhase {
             edges2.add(idx1);
             edgesMap.put(idx1, edges1);
             edgesMap.put(idx2, edges2);
-        }
+       }
     }
 
     /**
@@ -544,7 +551,7 @@ public class TreeBoundedRepair implements RepairPhase {
 
             public void init(ComAgent parent) {
                 this.parent = parent; // could be null;
-                // Retrieve neighbors with retained (frozen) variables.
+                // Retrieve neighbors with retained (frozen, not destroyed) variables.
                 List<Long> frozenNeighbors = new ArrayList<>();
                 DLNSAgentView view = selfRef.getAgentView();
                 for (ComAgent neighbor : selfRef.getNeighborsRef()) {
@@ -564,7 +571,7 @@ public class TreeBoundedRepair implements RepairPhase {
 
                 // Construct the constraint evaluator Retrieve constraints involved
                 List<Long> treeAgtsID = new ArrayList<>();
-                if(!getPseduoTreeK().isRoot()) {
+                if (!getPseduoTreeK().isRoot()) {
                     treeAgtsID.add(parent.getId());
                     treeAgtsID.add(selfRef.getId());
                     // LB constraint evaluator analyzes constraints with xi and Pi
@@ -575,11 +582,10 @@ public class TreeBoundedRepair implements RepairPhase {
                 frozenAgtsID.add(selfRef.getId());
                 frozenAgtsID.addAll(frozenNeighbors);
                 selfRef.getAgentView().pHatEvaluatorK.initialize(frozenAgtsID);
-
             }
 
             public void generate() {
-                // pTree is only a sub-part of the problem to evaluate, to evaluate it compleatly
+                // pTree is only a sub-part of the problem to evaluate, to evaluate it completely
                 // it need to be added to pHat
                 AgentView.Evaluator pTree = selfRef.getAgentView().pCheckEvaluatorK;
                 AgentView.Evaluator pFrozen = selfRef.getAgentView().pHatEvaluatorK;
@@ -725,7 +731,7 @@ public class TreeBoundedRepair implements RepairPhase {
 
         /**
          * Only retained variable agents execute this part.
-         * Wait for all the destoyed neighbors to send their updated information.
+         * Wait for all the destroyed neighbors to send their updated information.
          */
         public void start() {
             terminated = false;

@@ -33,14 +33,28 @@ public class RandomDestroy implements DestroyPhase {
     @Override
     public void start() {
         terminated = false;
-        if (currentIteration == 1)
+        if (currentIteration == 1) {
+            // Destroy all variables to build BMS tree
             selfRef.getAgentView().varDestroyed = true;
-        else 
+        }
+        else {
+            // Destroy based on degree
+            // Percentage from 10% to 90%
+            double threshold = (selfRef.getNbNeighbors() - selfRef.getMinDegree()) * 1.0 
+                                / (selfRef.getMaxDegree() - selfRef.getMinDegree()) * 0.8 + 0.1;
+//            if (currentIteration == 2) {
+//                System.out.println(selfRef.getMinDegree() + " " + selfRef.getNbNeighbors() + " "
+//                                    + selfRef.getMaxDegree());
+//                System.out.println(percent);
+//            }
+            
+//            if (Double.compare(rnd.nextDouble(), threshold) < 0)
+//                selfRef.getAgentView().varDestroyed = true;
+//            else
+//                selfRef.getAgentView().varDestroyed = false;
+            
             selfRef.getAgentView().varDestroyed = rnd.nextBoolean();
-        
-        // TODO: destroy variables with more neighbors
-        // Probability???
-        // Get the maximum degree of all variables
+        }
 
         if(selfRef.getAgentView().varDestroyed) {
         } 

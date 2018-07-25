@@ -12,9 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-import javax.imageio.plugins.bmp.BMPImageWriteParam;
-
-
 /**
  * Created by ffiorett on 7/31/15.
  */
@@ -37,6 +34,13 @@ public class DLNSagent extends DCOPagent {
 //    private int				f_j;
 //    private static int		UB_j;	
     private int currentLeastUB;
+    private static int minDegree;
+    private static int maxDegree;
+    
+    static {
+        minDegree = Integer.MAX_VALUE;
+        maxDegree = Integer.MIN_VALUE;
+    }
 
 	public DLNSagent(ComAgent statsCollector, AgentState agentState, List<Object> parameters) {
         super(statsCollector, agentState.getName(), agentState.getID());
@@ -111,6 +115,14 @@ public class DLNSagent extends DCOPagent {
         while (!terminationCondition()) {
             k++;
             getAgentView().currentIteration = k;
+            if (k == 1) {
+                if (getSelf().getNbNeighbors() < minDegree) minDegree = getSelf().getNbNeighbors();
+                if (getSelf().getNbNeighbors() > maxDegree) maxDegree = getSelf().getNbNeighbors();
+            }
+            else if (k == 2) {
+                setMaxDegree(maxDegree);
+                setMinDegree(minDegree);
+            }
             DLNScycle(k, bmsFile);
             getAgentStatistics().updateIterationStats();
 
@@ -183,6 +195,8 @@ public class DLNSagent extends DCOPagent {
             await();
         }
 
+        // TODO: check if feasible solutions
+        // => If yes, keep the new solutions. Otherwise, assign to the previous iterations
         // Accepts even if it does violate hard constraints!
         getAgentActions().setVariableValue(getAgentView().varCheckValueK);
         // System.out.println(k + ": " + getName() + " setting value= " + getAgentView().varCheckValueK);
@@ -208,6 +222,24 @@ public class DLNSagent extends DCOPagent {
                 System.out.println("ITER " + k + " is UNSAT");
             }
         }
+    }
+
+
+    public int getMaxDegree() {
+        return maxDegree;
+    }
+
+    public void setMaxDegree(int maxDegree) {
+        this.maxDegree = maxDegree;
+    }
+
+
+    public int getMinDegree() {
+        return minDegree;
+    }
+
+    public void setMinDegree(int minDegree) {
+        this.minDegree = minDegree;
     }
 
 
